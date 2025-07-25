@@ -189,6 +189,39 @@ export interface Receipt {
   created_at: string;
 }
 
+export interface PaymentData {
+  user_id: string;
+  payment_method: 'cash' | 'card' | 'mobile' | 'bank';
+  amount: number;
+  tip_amount?: number;
+  reference?: string;
+}
+
+export interface OrderData {
+  table_id?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_count?: number;
+  order_type: 'dine_in' | 'takeaway' | 'delivery' | 'bar';
+  items: Array<{
+    menu_item_id: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+    modifiers?: any[];
+    special_instructions?: string;
+  }>;
+  user_id: string;
+  discount_type?: 'percentage' | 'amount';
+  discount_value?: string;
+  status?: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  estimated_time?: number;
+  notes?: string;
+  special_requests?: string;
+  reference?: string;
+}
+
 export interface CartItem {
   id: string;
   menu_item: MenuItem;

@@ -847,6 +847,7 @@ app.post('/orders/:orderId/payment', async (req, res) => {
 
     const order = orderRows[0];
 
+    // Store reference for all payment methods including cash
     const { rows: paymentRows } = await pool.query(`
       INSERT INTO payments (
         order_id, payment_method, amount, tip_amount, change_amount, reference_number, 
@@ -855,7 +856,7 @@ app.post('/orders/:orderId/payment', async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, NOW(), NOW())
       RETURNING *
     `, [orderId, payment_method, parseFloat(amount), parseFloat(tip_amount), parseFloat(change_amount), 
-        reference_number, card_last_four, user_id]);
+        reference_number || null, card_last_four || null, user_id]);
 
     const payment = paymentRows[0];
 

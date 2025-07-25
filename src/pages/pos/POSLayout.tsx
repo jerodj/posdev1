@@ -77,6 +77,13 @@ export function POSLayout({ children, activeView, onViewChange, onStartShift }: 
                   <span className="text-xs text-green-600">
                     ${formatCurrency(currentShift.total_sales)}
                   </span>
+                  <button
+                    onClick={onStartShift}
+                    className="ml-2 text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg transition-colors"
+                    title="End Shift"
+                  >
+                    End
+                  </button>
                 </div>
               ) : (
                 <button

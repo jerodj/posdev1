@@ -88,7 +88,7 @@ export function POSPage() {
         {/* Order Panel - Show only on menu and tables views */}
         {(activeView === 'menu' || activeView === 'tables') && (
           <div className="w-96 border-l border-gray-200 bg-white">
-            <OrderPanel />
+            <OrderPanel onPayment={handlePayment} />
           </div>
         )}
       </div>

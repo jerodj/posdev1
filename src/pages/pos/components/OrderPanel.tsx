@@ -3,11 +3,16 @@ import { usePOSStore } from '../../../store/posStore';
 import { ShoppingCart, Plus, Minus, Trash2, Send, User, MapPin, Percent, DollarSign, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export function OrderPanel() {
+interface OrderPanelProps {
+  onPayment?: (order: any) => void;
+}
+
+export function OrderPanel({ onPayment }: OrderPanelProps = {}) {
   const {
     cart,
     selectedTable,
     currentUser,
+    currentShift,
     discountType,
     discountValue,
     updateCartItem,
@@ -23,6 +28,7 @@ export function OrderPanel() {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [tempDiscountType, setTempDiscountType] = useState<'percentage' | 'amount'>('percentage');
   const [tempDiscountValue, setTempDiscountValue] = useState('');
+  const [showPaymentFirst, setShowPaymentFirst] = useState(false);
 
   const subtotal = cart.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
   let discountAmount = 0;
@@ -33,6 +39,7 @@ export function OrderPanel() {
   const taxAmount = discountedSubtotal * 0.1;
   const total = discountedSubtotal + taxAmount;
 
+  // Create order and optionally send to kitchen
   const handleCreateOrder = async (sendToKitchenFlag = false) => {
     if (cart.length === 0) {
       toast.error('Cart is empty');
@@ -46,6 +53,12 @@ export function OrderPanel() {
       toast.error('No user logged in');
       return;
     }
+    
+    // Warn if no shift but allow order creation
+    if (!currentShift && ['server', 'bartender', 'cashier'].includes(currentUser.role)) {
+      toast.warning('Creating order without active shift');
+    }
+    
     setLoading(true);
     try {
       const order = await createOrder(orderType, customerName, sendToKitchenFlag);
@@ -57,6 +70,23 @@ export function OrderPanel() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle payment before sending to kitchen
+  const handlePaymentFirst = async () => {
+    try {
+      const order = await handleCreateOrder(false); // Create order without sending to kitchen
+      if (order && onPayment) {
+        onPayment(order);
+        setShowPaymentFirst(false);
+      }
+    } catch (error) {
+      toast.error(`Failed to create order for payment: ${error.message}`);
+    }
+  };
+
+  const handleTogglePaymentFirst = () => {
+    setShowPaymentFirst(!showPaymentFirst);
   };
 
   const handleApplyDiscount = () => {
@@ -80,7 +110,7 @@ export function OrderPanel() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex flex-col bg-gradient-to-br from-slate-50 to-slate-100" style={{ height: 'calc(100vh - 140px)' }}>
       <div className="p-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
         <h2 className="text-xl font-bold flex items-center">
           <ShoppingCart className="w-6 h-6 mr-3" />
@@ -88,6 +118,15 @@ export function OrderPanel() {
         </h2>
         <p className="text-purple-100 mt-1">{cart.length} items in cart</p>
       </div>
+      
+      {/* Payment First Toggle */}
+      <div className="p-4 bg-white border-b border-gray-200">
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input type="checkbox" checked={showPaymentFirst} onChange={handleTogglePaymentFirst} className="rounded" />
+          <span className="text-sm font-medium text-gray-700">Accept payment before kitchen</span>
+        </label>
+      </div>
+      
       <div className="p-4 bg-white border-b border-gray-200">
         <label className="block text-sm font-semibold text-gray-700 mb-3">Order Type</label>
         <div className="grid grid-cols-2 gap-2">
@@ -249,6 +288,16 @@ export function OrderPanel() {
             </div>
           </div>
           <div className="space-y-3">
+            {showPaymentFirst && (
+              <button
+                onClick={handlePaymentFirst}
+                disabled={loading}
+                className="w-full py-4 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 disabled:opacity-50 font-bold text-lg transition-all flex items-center justify-center transform hover:scale-105"
+              >
+                <DollarSign className="w-5 h-5 mr-2" />
+                {loading ? 'Processing...' : 'Accept Payment First'}
+              </button>
+            )}
             <button
               onClick={() => handleCreateOrder(true)}
               disabled={loading}

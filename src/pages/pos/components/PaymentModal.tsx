@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { usePOSStore } from '../../../store/posStore';
 import { CreditCard, DollarSign, Smartphone, Receipt } from 'lucide-react';
@@ -55,8 +54,8 @@ export function PaymentModal({ order: initialOrder, onClose }: PaymentModalProps
       toast.error('No order data available');
       return;
     }
-    if ((paymentMethod === 'card' || paymentMethod === 'mobile') && !reference.trim()) {
-      toast.error('Reference number is required for card or mobile payments');
+    if (paymentMethod !== 'cash' && !reference.trim()) {
+      toast.error(`Reference number is required for ${paymentMethod} payments`);
       return;
     }
     if (tip < 0) {
@@ -70,7 +69,7 @@ export function PaymentModal({ order: initialOrder, onClose }: PaymentModalProps
         paymentMethod,
         amount: order.total_amount,
         tip,
-        reference: paymentMethod === 'cash' ? undefined : reference.trim(),
+        reference: reference.trim() || undefined,
       };
       console.log('PaymentModal sending payment:', paymentData);
       await processPayment(
@@ -78,7 +77,7 @@ export function PaymentModal({ order: initialOrder, onClose }: PaymentModalProps
         paymentMethod,
         order.total_amount,
         tip,
-        paymentMethod === 'cash' ? undefined : reference.trim()
+        reference.trim() || undefined
       );
       toast.success('💰 Payment processed successfully!');
       onClose();
@@ -210,7 +209,7 @@ export function PaymentModal({ order: initialOrder, onClose }: PaymentModalProps
             />
           </div>
 
-          {(paymentMethod === 'card' || paymentMethod === 'mobile') && (
+          {paymentMethod !== 'cash' && (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-3">🔢 Payment Reference</label>
               <input
@@ -218,8 +217,21 @@ export function PaymentModal({ order: initialOrder, onClose }: PaymentModalProps
                 value={reference}
                 onChange={(e) => setReference(e.target.value.trimStart())}
                 className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg font-semibold"
-                placeholder="Enter transaction ID (e.g., TXN12345)"
+                placeholder={paymentMethod === 'card' ? 'Enter card transaction ID' : paymentMethod === 'mobile' ? 'Enter mobile money reference' : 'Enter bank reference number'}
                 required
+              />
+            </div>
+          )}
+
+          {paymentMethod === 'cash' && (
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-3">📝 Receipt Reference (Optional)</label>
+              <input
+                type="text"
+                value={reference}
+                onChange={(e) => setReference(e.target.value.trimStart())}
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg font-semibold"
+                placeholder="Enter receipt number or reference"
               />
             </div>
           )}

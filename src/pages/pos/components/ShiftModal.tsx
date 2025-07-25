@@ -55,6 +55,10 @@ export function ShiftModal({ onClose }: ShiftModalProps) {
       toast.error('No user logged in');
       return;
     }
+    if (!currentShift) {
+      toast.error('No active shift to end');
+      return;
+    }
     const amount = parseFloat(endingCash);
     if (isNaN(amount) || amount < 0) {
       toast.error('Please enter a valid ending cash amount');

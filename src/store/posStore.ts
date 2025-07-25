@@ -279,6 +279,13 @@ export const usePOSStore = create<POSState>()(
         if (!currentUser) throw new Error('No user logged in');
         if (cart.length === 0) throw new Error('Cart is empty');
         if (orderType === 'dine_in' && !selectedTable) throw new Error('No table selected');
+        
+        // Allow orders even without active shift
+        const { currentShift } = get();
+        if (!currentShift && ['server', 'bartender', 'cashier'].includes(currentUser.role)) {
+          console.warn('Creating order without active shift');
+        }
+        
         set({ loading: true });
         try {
           const items = cart.map(item => ({
@@ -377,6 +384,13 @@ export const usePOSStore = create<POSState>()(
       processPayment: async (orderId: string, paymentMethod: string, amount: number, tip = 0) => {
         const { currentUser } = get();
         if (!currentUser) throw new Error('No user logged in');
+        
+        // Allow payment processing even without active shift
+        const { currentShift } = get();
+        if (!currentShift && ['server', 'bartender', 'cashier'].includes(currentUser.role)) {
+          console.warn('Processing payment without active shift');
+        }
+        
         set({ loading: true });
         try {
           console.log(JSON.stringify({

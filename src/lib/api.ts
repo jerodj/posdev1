@@ -567,6 +567,7 @@ class POSApi {
       body: JSON.stringify({
         ...paymentData,
         tip_amount: paymentData.tip_amount || 0,
+        reference_number: paymentData.reference || null,
       }),
     });
   }
